@@ -9,7 +9,7 @@ module.exports = (function () {
         refercodeController.index(req, res);
     });
 
-    router.post('/', [validatorClass.useJWTMiddleware(), validatorClass.refercodeRouteValidate('store')], function (req, res, next) {
+    router.post('/', [validatorClass.refercodeRouteValidate('store')], function (req, res, next) {
         refercodeController.store(req, res);
     });
 

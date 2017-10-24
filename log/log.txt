@@ -129447,3 +129447,18 @@
 17-10-17 18:16:30 : RESTful API server started on : 7778
 17-10-17 18:17:31 : RESTful API server started on : 7778
 17-10-17 18:22:17 : RESTful API server started on : 7778
+23-10-17 11:58:32 : RESTful API server started on : 7778
+23-10-17 11:59:24 : RESTful API server started on : 7778
+23-10-17 11:59:26 : Refercode already exists for this email
+23-10-17 11:59:41 : Base URL : http://52.187.124.61:7777
+23-10-17 11:59:41 : link : http://52.187.124.61:7777?ref=HNW79REY
+23-10-17 11:59:41 : Refercode added successfully !
+23-10-17 14:28:18 : RESTful API server started on : 7778
+23-10-17 14:28:23 : Email and password does not match.
+23-10-17 14:28:39 : User is not yet authenticated.
+23-10-17 14:28:51 : Login Successful : 
+23-10-17 14:29:50 : Transaction added successfully !
+23-10-17 18:01:30 : RESTful API server started on : 7778
+23-10-17 18:03:56 : RESTful API server started on : 7778
+23-10-17 18:04:49 : RESTful API server started on : 7778
+23-10-17 18:05:12 : RESTful API server started on : 7778

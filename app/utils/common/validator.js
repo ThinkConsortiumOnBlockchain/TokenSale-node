@@ -36,7 +36,7 @@ module.exports = {
                             .len(8,8).withMessage(helpers.checkLength('Referral Code', 8, 8));
 
                     req.checkBody('telephoneNumber', helpers.checkIfRequired('Telephone Number')).notEmpty()
-                        .isNumeric().withMessage(helpers.checkIfNumeric('telephoneNumber Number'))
+                        //.isNumeric().withMessage(helpers.checkIfNumeric('telephoneNumber Number'))
                         .len(4, 15).withMessage(helpers.checkLength('telephoneNumber Number', 4, 15));
 
                     break;
@@ -106,7 +106,7 @@ module.exports = {
                 case 'updateUserDetails' :
                     if (req.body.telephoneNumber) {
                         req.checkBody('telephoneNumber', helpers.checkIfRequired('Telephone Number')).notEmpty()
-                            .isNumeric().withMessage(helpers.checkIfNumeric('telephoneNumber Number'))
+                            //.isNumeric().withMessage(helpers.checkIfNumeric('telephoneNumber Number'))
                             .len(4, 15).withMessage(helpers.checkLength('telephoneNumber Number', 4, 15));
                     } else {
                         req.checkBody('oldPassword', helpers.checkIfRequired('Old Password')).notEmpty();

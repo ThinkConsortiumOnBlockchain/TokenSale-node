@@ -26,7 +26,7 @@ var userSchema = new Schema({
         type  : String
     },
     telephoneNumber : {
-        type  : Number
+        type  : String
     },
     country   : {
         type  : String

@@ -23,7 +23,7 @@ module.exports = {
             var sortBy       = helpers.getSortBy(req);
             var sortOrder    = helpers.getSortOrder(req);
             var sortData     = {}; //create an empty object
-            var allowFields = ['code'];
+            var allowFields = ['code', 'email'];
 
             // assign that object  now
             sortData[sortBy] = sortOrder;
@@ -38,7 +38,8 @@ module.exports = {
 
                 for (var key in search) {
                     if (allowFields.includes(key)) {
-                        if (mongoose.Types.ObjectId.isValid(search[key]) || key === 'code') {
+                        if (mongoose.Types.ObjectId.isValid(search[key]) || key === 'code' ||
+                        key === 'email') {
                             /*if (key === 'code')
                                 query.where('code', search[key]);
                             else*/
@@ -132,92 +133,96 @@ module.exports = {
 
     store: function (req, res) {
         try {
-            var loggedInUser = helpers.parseJWTToken(req);
-            if (! loggedInUser) {
-                log('Error in parsing JWT : ', err);
-                helpers.createResponse(res, constants.SERVER_ERROR,
-                    messages.SERVER_ERROR_MESSAGE,
-                    {'error': messages.SERVER_ERROR_MESSAGE}
-                );
-            } else {
-                helpers.findOne(res, Refercode, constants.REFERCODE_MODEL_NAME,
-                    {email: req.body.email}, {},
-                    function (refercodeInfo) {
-                        if (refercodeInfo) {
-                            log('Refercode already exists for this email');
-                            helpers.createResponse(res, constants.UNPROCESSED,
-                                messages.REFERCODE_EXISTS,
-                                {'error': messages.REFERCODE_EXISTS}
-                            );
-                        } else {
-                            var referCode = null;
-                            var codeRepeatFlag = false;
+            helpers.findOne(res, User, constants.USER_MODEL_NAME,
+                {email: req.body.email}, {},
+                function (user) {
+                    if (!user || typeof user === 'undefined') {
+                        log('User does not exist');
+                        helpers.createResponse(res, constants.SERVER_ERROR,
+                            messages.SERVER_ERROR_MESSAGE,
+                            {'error': messages.SERVER_ERROR_MESSAGE}
+                        );
+                    } else {
+                        helpers.findOne(res, Refercode, constants.REFERCODE_MODEL_NAME,
+                            {email: req.body.email}, {},
+                            function (refercodeInfo) {
+                                if (refercodeInfo) {
+                                    log('Refercode already exists for this email');
+                                    helpers.createResponse(res, constants.UNPROCESSED,
+                                        messages.REFERCODE_EXISTS,
+                                        {'error': messages.REFERCODE_EXISTS}
+                                    );
+                                } else {
+                                    var referCode = null;
+                                    var codeRepeatFlag = false;
 
-                            async.whilst(function () {
-                                return codeRepeatFlag === false;
-                            }, function (next) {
-                                var code = helpers.referCode(8);
-                                helpers.findOne(res, Refercode, constants.REFERCODE_MODEL_NAME,
-                                    {code: code}, {},
-                                    function (codeInfo) {
-                                        if (codeInfo) {
-                                            codeRepeatFlag = false;
-                                            next();
-                                        } else {
-                                            referCode = code;
-                                            codeRepeatFlag = true;
-                                            next();
-                                        }
-                                    }
-                                );
-                            }, function () {
-                                var newReferCode = new Refercode({
-                                    email           : req.body.email,
-                                    ethereumAddress : req.body.ethereumAddress,
-                                    code            : referCode,
-                                    ipAddress       : req.connection.remoteAddress,
-                                    userId          : loggedInUser._id
-                                });
-
-                                newReferCode.save(function (err, referCode) {
-                                    if (err) {
-                                        log('Error in Refercode store => save : ', err.message);
-                                        helpers.createResponse(res, constants.SERVER_ERROR,
-                                            messages.MODULE_STORE_ERROR(constants.REFERCODE_MODEL_NAME),
-                                            {'error': messages.SERVER_ERROR_MESSAGE}
-                                        );
-                                    } else {
-                                        helpers.findOneUpdateOrInsert(res, User, constants.USER_MODEL_NAME,
-                                            {email: req.body.email},
-                                            {$set: {referralCode: referCode.code}},
-                                            {new: true, runValidators: true},
-                                            function (updatedUser) {
-                                                log('Base URL : ' + constants.BASE_DESIGN_URL);
-                                                var link = constants.BASE_DESIGN_URL + '?' + 'ref=' + referCode.code;
-                                                log('link : ' + link);
-                                                helpers.sendHtmlMail(
-                                                    {
-                                                        firstName : loggedInUser.firstName,
-                                                        lastName  : loggedInUser.lastName,
-                                                        code      : referCode.code,
-                                                        link      : link
-                                                    },
-                                                    req.body.email, 'Refer Code - ProofTokensale', BASE_PATH + '/views/emails/refercode.hbs'
-                                                );
-                                                log('Refercode added successfully !');
-                                                helpers.createResponse(res, constants.SUCCESS,
-                                                    messages.REFERCODE_SUCCESS,
-                                                    {'data': referCode.code}
-                                                );
+                                    async.whilst(function () {
+                                        return codeRepeatFlag === false;
+                                    }, function (next) {
+                                        var code = helpers.referCode(8);
+                                        helpers.findOne(res, Refercode, constants.REFERCODE_MODEL_NAME,
+                                            {code: code}, {},
+                                            function (codeInfo) {
+                                                if (codeInfo) {
+                                                    codeRepeatFlag = false;
+                                                    next();
+                                                } else {
+                                                    referCode = code;
+                                                    codeRepeatFlag = true;
+                                                    next();
+                                                }
                                             }
                                         );
-                                    }
-                                });
-                            });
-                        }
+                                    }, function () {
+                                        var newReferCode = new Refercode({
+                                            email           : req.body.email,
+                                            ethereumAddress : req.body.ethereumAddress,
+                                            code            : referCode,
+                                            ipAddress       : req.connection.remoteAddress,
+                                            userId          : user._id
+                                        });
+
+                                        newReferCode.save(function (err, referCode) {
+                                            if (err) {
+                                                log('Error in Refercode store => save : ', err.message);
+                                                helpers.createResponse(res, constants.SERVER_ERROR,
+                                                    messages.MODULE_STORE_ERROR(constants.REFERCODE_MODEL_NAME),
+                                                    {'error': messages.SERVER_ERROR_MESSAGE}
+                                                );
+                                            } else {
+                                                helpers.findOneUpdateOrInsert(res, User, constants.USER_MODEL_NAME,
+                                                    {email: req.body.email},
+                                                    {$set: {referralCode: referCode.code}},
+                                                    {new: true, runValidators: true},
+                                                    function (updatedUser) {
+                                                        log('Base URL : ' + constants.BASE_DESIGN_URL);
+                                                        var link = constants.BASE_DESIGN_URL + '?' + 'ref=' + referCode.code;
+                                                        log('link : ' + link);
+                                                        helpers.sendHtmlMail(
+                                                            {
+                                                                firstName : user.firstName,
+                                                                lastName  : user.lastName,
+                                                                code      : referCode.code,
+                                                                link      : link
+                                                            },
+                                                            req.body.email, 'Refer Code - ProofTokensale', BASE_PATH + '/views/emails/refercode.hbs'
+                                                        );
+                                                        log('Refercode added successfully !');
+                                                        helpers.createResponse(res, constants.SUCCESS,
+                                                            messages.REFERCODE_SUCCESS,
+                                                            {'data': referCode.code}
+                                                        );
+                                                    }
+                                                );
+                                            }
+                                        });
+                                    });
+                                }
+                            }
+                        );
                     }
-                );
-            }
+                }
+            );
         } catch (err) {
             log('Error in refercode => store API : ', err);
             helpers.createResponse(res, constants.SERVER_ERROR,
